@@ -2,44 +2,43 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 import serverless from 'serverless-http'
-
 import 'dotenv/config'
+
 import connectDb from './config/mongodb.js'
 import connectCloudinary from './config/cloudinary.js'
 import userRouter from './routes/userRoute.js'
-import productRouterr from './routes/productRoute.js'
+import productRouter from './routes/productRoute.js'
 import cartRouter from './routes/cartRoute.js'
 import orderRouter from './routes/orderRoute.js'
 
-
-// App config
 const app = express()
-const port = process.env.PORT || 4000
-connectDb()
-connectCloudinary()
 
-// MIDDLEWARES
+// Connect services without blocking Vercel function startup
+connectDb()
+  .then(() => console.log('MongoDB connected'))
+  .catch((error) => console.error('MongoDB connection error:', error))
+
+connectCloudinary()
+  .then(() => console.log('Cloudinary configured'))
+  .catch((error) => console.error('Cloudinary configuration error:', error))
+
+// Middleware
 app.use(express.json())
 app.use(cors())
-app.use((req, res, next) => {
-  console.log('backend request', { method: req.method, path: req.path, headers: {
-    token: req.headers.token,
-    authorization: req.headers.authorization
-  } })
-  next()
-})
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
-// API endpoints
+// Routes
 app.use('/api/user', userRouter)
-app.use('/api/product', productRouterr)
+app.use('/api/product', productRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/orders', orderRouter)
+
 app.get('/', (req, res) => {
-  res.send('API working')
+  res.send('API Working')
 })
 
 if (!process.env.VERCEL) {
+  const port = process.env.PORT || 4000
   app.listen(port, () => {
     console.log(`server started on port ${port}`)
   })
