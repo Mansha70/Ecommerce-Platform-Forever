@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
+import serverless from 'serverless-http'
 
 import 'dotenv/config'
 import connectDb from './config/mongodb.js'
@@ -11,12 +12,13 @@ import cartRouter from './routes/cartRoute.js'
 import orderRouter from './routes/orderRoute.js'
 
 
-//App config
+// App config
 const app = express()
 const port = process.env.PORT || 4000
 connectDb()
 connectCloudinary()
-//MIDDLEWARES
+
+// MIDDLEWARES
 app.use(express.json())
 app.use(cors())
 app.use((req, res, next) => {
@@ -28,16 +30,19 @@ app.use((req, res, next) => {
 })
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
-
-//api endpoint
+// API endpoints
 app.use('/api/user', userRouter)
 app.use('/api/product', productRouterr)
-app.use('/api/cart',cartRouter)
-app.use('/api/orders',orderRouter)
+app.use('/api/cart', cartRouter)
+app.use('/api/orders', orderRouter)
 app.get('/', (req, res) => {
   res.send('API working')
 })
 
-app.listen(port, () => {
-  console.log('server started')
-})
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`server started on port ${port}`)
+  })
+}
+
+export default serverless(app)
