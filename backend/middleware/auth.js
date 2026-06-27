@@ -25,6 +25,14 @@ const authUser = async (req, res, next) => {
     }
 
     try {
+        if (!process.env.JWT_SECRET) {
+            console.log('authUser missing JWT_SECRET')
+            return res.status(500).json({
+                success: false,
+                message: 'Server misconfigured: JWT_SECRET is missing',
+            })
+        }
+
         const token_decode = jwt.verify(token, process.env.JWT_SECRET)
         req.body.userId = token_decode.id
         next()
