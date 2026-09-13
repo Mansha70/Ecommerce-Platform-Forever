@@ -5,11 +5,15 @@ import razorpay from 'razorpay'
 import crypto from 'crypto'
 
 // Stripe Gateway
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const razorpayInstance=new razorpay({
-  key_id:process.env.RAZORPAY_KEY_ID,
-  key_secret:process.env.RAZORPAY_KEY_SECRET
-})
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null
+const razorpayInstance = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+  ? new razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    })
+  : null
 
 const currency = "inr";
 const deliveryCharge=10
@@ -57,6 +61,13 @@ const placeOrder = async (req, res) => {
 // PLACE ORDER (STRIPE)
 // ====================
 const placeOrderStripe = async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({
+      success: false,
+      message: 'Stripe is not configured on the server',
+    })
+  }
+
   try {
     const { userId, items, amount, address } = req.body;
     const { origin } = req.headers;
@@ -186,6 +197,13 @@ const verifyRazorpay = async (req, res) => {
 // PLACE ORDER (RAZORPAY)
 // ====================
 const placeOrderRazorpay = async (req, res) => {
+  if (!razorpayInstance) {
+    return res.status(503).json({
+      success: false,
+      message: 'Razorpay is not configured on the server',
+    })
+  }
+
   try {
      const { userId, items, amount, address } = req.body;
     const { origin } = req.headers;
